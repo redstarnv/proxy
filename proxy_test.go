@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	proxy "github.com/redstarnv/proxy"
+	"github.com/redstarnv/proxy"
 	"github.com/stretchr/testify/require"
 )
 
