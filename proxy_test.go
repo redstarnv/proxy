@@ -50,9 +50,7 @@ var responseHeaders = map[string]string{
 }
 
 func sendRequest(t *testing.T, target *httptest.Server, mchan chan proxy.Data) *http.Response {
-	cb := func(status int, err error) {}
-
-	h, err := proxy.NewHandler(target.URL, timeout, mchan, cb)
+	h, err := proxy.NewHandler(target.URL, timeout, mchan)
 	require.NoError(t, err)
 
 	prx := httptest.NewServer(h)
@@ -119,10 +117,9 @@ func TestErroredRequestProxying(t *testing.T) {
 	require.Equal(t, http.StatusInternalServerError, res.StatusCode)
 	validateBody(t, res.Body, "500 - boom")
 
-	// verify that data message has not been published
 	select {
-	case _ = <-mchan:
-		require.Fail(t, "Proxy must not have published a data item")
+	case data := <-mchan:
+		require.Equal(t, http.StatusInternalServerError, data.StatusCode, "Published status must be 500")
 	default:
 	}
 }
@@ -140,10 +137,9 @@ func TestBrokenUpstreamConnection(t *testing.T) {
 
 	require.Equal(t, http.StatusServiceUnavailable, res.StatusCode)
 
-	// verify that data message has not been published
 	select {
-	case _ = <-mchan:
-		require.Fail(t, "Proxy must not have published a data item")
+	case data := <-mchan:
+		require.Equal(t, http.StatusServiceUnavailable, data.StatusCode, "Published status must be 503")
 	default:
 	}
 }
@@ -169,8 +165,8 @@ func TestUpstreamTimeout(t *testing.T) {
 	// verify that data message has not been published
 	target.Close()
 	select {
-	case _ = <-mchan:
-		require.Fail(t, "Proxy must not have published a data item")
+	case data := <-mchan:
+		require.Equal(t, http.StatusServiceUnavailable, data.StatusCode, "Published status must be 503")
 	default:
 	}
 }
