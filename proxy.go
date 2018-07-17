@@ -18,6 +18,7 @@ type Data struct {
 	Response   io.Reader
 	Error      error
 	Times      Times
+	Source     string
 }
 
 // upstream definition for the server we're proxying data to
@@ -71,6 +72,8 @@ func handleRequest(transport *http.Transport, w http.ResponseWriter, d *Data, r 
 	if err != nil {
 		return err
 	}
+
+	d.Source = r.Header.Get("Source")
 
 	return process(transport, d, req, w)
 }
