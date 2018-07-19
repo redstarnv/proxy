@@ -13,12 +13,13 @@ import (
 
 // Data consisting of request/response proxied through the service
 type Data struct {
-	StatusCode int
-	Request    io.Reader
-	Response   io.Reader
-	Error      error
-	Times      Times
-	Source     string
+	StatusCode     int
+	Request        io.Reader
+	Response       io.Reader
+	Error          error
+	Times          Times
+	ResponseHeader http.Header
+	RequestHeader  http.Header
 }
 
 // upstream definition for the server we're proxying data to
@@ -73,8 +74,6 @@ func handleRequest(transport *http.Transport, w http.ResponseWriter, d *Data, r 
 		return err
 	}
 
-	d.Source = r.Header.Get("Source")
-
 	return process(transport, d, req, w)
 }
 
@@ -99,6 +98,7 @@ func process(transport *http.Transport, d *Data, req *http.Request, w http.Respo
 		return err
 	}
 	d.StatusCode = res.StatusCode
+	d.ResponseHeader = res.Header
 
 	responseBuf := &bytes.Buffer{}
 	defer res.Body.Close()
@@ -130,6 +130,7 @@ func prepareRequest(r *http.Request, d *Data, target *url.URL) (*http.Request, e
 		return nil, err
 	}
 
+	d.RequestHeader = r.Header
 	copyHeaders(req.Header, r.Header)
 
 	trace := &httptrace.ClientTrace{
