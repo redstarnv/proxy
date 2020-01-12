@@ -36,7 +36,7 @@ type Times struct {
 }
 
 // maximum of idle upstream connections to keep open
-const httpMaxIdleConns = 100
+const httpMaxIdleConns = 256
 
 // NewHandler creates http.HandlerFunc that proxies requests
 // to the given URL
@@ -85,6 +85,7 @@ func newTransport(timeout time.Duration) *http.Transport {
 			DualStack: true,
 		}).DialContext,
 		MaxIdleConns:          httpMaxIdleConns,
+		MaxIdleConnsPerHost:   httpMaxIdleConns,
 		IdleConnTimeout:       timeout,
 		ResponseHeaderTimeout: timeout,
 		ExpectContinueTimeout: 1 * time.Second,
