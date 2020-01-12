@@ -114,7 +114,11 @@ func process(transport *http.Transport, d *Data, req *http.Request, w http.Respo
 
 func copyHeaders(dst http.Header, src http.Header) {
 	for k := range src {
-		dst.Set(k, src.Get(k))
+		// Do not copy "Connection: close" header, as it makes keep-alives impossible.
+		// For example, Savon sends it with every request
+		if k != "Connection" {
+			dst.Set(k, src.Get(k))
+		}
 	}
 }
 
